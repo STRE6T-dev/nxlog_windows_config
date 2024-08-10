@@ -163,9 +163,9 @@ define aisiem                                                                   
 </Input>
 
 <Output Out_graylog>
-  Module om_udp
+  Module om_tcp
   Host 10.0.0.9
-  Port 5154
+  Port 12201
   Exec to_gelf();  ## Convert data to GELF format
 </Output>
 
