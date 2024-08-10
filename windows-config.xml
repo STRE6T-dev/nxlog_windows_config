@@ -162,14 +162,15 @@ define aisiem                                                                   
   </Exec>
 </Input>
 
-<Output out>
+<Output Out_graylog>
   Module om_udp
-  Host 192.168.212.2
+  Host 10.0.0.9
   Port 5154
   Exec to_gelf();  ## Convert data to GELF format
 </Output>
 
 <Output DNS_Out>
+ 
   Module om_file
   File "C:\Logs\DNS_Logs.log"
 </Output>
@@ -205,33 +206,33 @@ define aisiem                                                                   
 </Output>
 
 <Route 1>
-  Path in => out
+  Path in => Out_graylog
 </Route>
 
 <Route DNS>
-  Path DNS_In => DNS_Out
+  Path DNS_In => DNS_Out => Out_graylog
 </Route>
 
 <Route DHCP>
-  Path DHCP_In => DHCP_Out
+  Path DHCP_In => DHCP_Out => Out_graylog
 </Route>
 
 <Route AD_Users>
-  Path AD_Users => AD_Users_Out
+  Path AD_Users => AD_Users_Out => Out_graylog
 </Route>
 
 <Route AD_Computers>
-  Path AD_Computers => AD_Computers_Out
+  Path AD_Computers => AD_Computers_Out => Out_graylog
 </Route>
 
 <Route AD_Hardware_Performance>
-  Path AD_Hardware_Performance => AD_Hardware_Performance_Out
+  Path AD_Hardware_Performance => AD_Hardware_Performance_Out => Out_graylog
 </Route>
 
 <Route USB_Audit>
-  Path USB_Audit => USB_Audit_Out
+  Path USB_Audit => USB_Audit_Out => Out_graylog
 </Route>
 
 <Route Network_Share_Audit>
-  Path Network_Share_Audit => Network_Share_Audit_Out
+  Path Network_Share_Audit => Network_Share_Audit_Out => Out_graylog
 </Route>
