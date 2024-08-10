@@ -1,0 +1,237 @@
+## This is a sample configuration file. See the nxlog reference manual about the
+## configuration options. It should be installed locally and is also available
+## online at http://nxlog.org/docs/
+## Please set the ROOT to the folder your nxlog was installed into,
+## otherwise it will not start.
+
+define ROOT C:\Program Files\nxlog
+#define ROOT C:\Program Files (x86)\nxlog
+
+Moduledir %ROOT%\modules
+CacheDir %ROOT%\data
+Pidfile %ROOT%\data\nxlog.pid
+SpoolDir %ROOT%\data
+LogFile %ROOT%\data\nxlog.log
+
+<Extension _json>    
+  Module xm_json
+</Extension>
+
+<Extension syslog>
+  Module xm_syslog
+</Extension>
+
+<Extension gelf>
+  Module xm_gelf
+</Extension>
+
+define aisiem                                                                       \
+1, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 17, 18,19, 20, 21, 104, 258, 259, 260,  \
+261, 262, 500, 517, 520, 528, 529, 530, 531, 532, 533, 534, 535, 536, 537, 538, 539,\
+540, 551, 552, 565, 600, 608, 609, 621, 622, 626, 627, 628, 629, 630, 636, 642, 644,\
+645, 647, 632, 663, 664, 671, 673, 675, 676, 677, 679, 680, 681, 682, 683, 684, 689,\
+690, 692, 1001, 1006, 1007, 1008, 1015, 1102, 1116, 1117, 1118, 1119, 2003, 2100,   \
+7034, 4624, 4625, 4634, 4647, 4649, 4656, 4657, 4659, 4661, 4663, 4670, 4688, 4697, \
+4704, 4705, 4717, 4718, 4720, 4722, 4723, 4724, 4725, 4726, 4727, 4728, 4729, 4730, \
+4731, 4732, 4733, 4734, 4735, 4737, 4738, 4739, 4740, 4741, 4742, 4743, 4744, 4745, \
+4746, 4747, 4748, 4749, 4750, 4751, 4752, 4753, 4754, 4755, 4756, 4757, 4758, 4759, \
+4760, 4761, 4762, 4763, 4764, 4767, 4769, 4771, 4772, 4773, 4775, 4776, 4777, 4778, \
+4779, 4780, 4782, 4783, 4784, 4785, 4786, 4787, 4788, 4789, 4790, 4791, 4793, 4794, \
+4797, 4798, 4800, 4801, 4802, 4803, 5001, 5004, 5007, 5010, 5012, 5136, 5137, 5140, \
+5141, 5142, 5143, 5144, 5145, 5376, 5377, 7045, 8003, 8004, 8007, 64004
+
+<Input in>
+  Module im_msvistalog
+  Query <QueryList>\
+          <Query Id="0">\
+            <Select Path="Security">* </Select>\
+            <Select Path="Application">* </Select>\
+            <Select Path="Setup">* </Select>\
+            <Select Path="System">* </Select>\
+          </Query>\
+        </QueryList>
+  <Exec>
+    if ($EventID NOT IN (%aisiem%)) drop();
+  </Exec>
+</Input>
+
+<Input DNS_In>
+  Module im_file
+  File "C:\DNS LOG\dns*"
+  SavePos TRUE
+  InputType LineBased
+  Exec if $raw_event =~ /^#/ drop();
+  Exec $Message = $raw_event;
+</Input>
+
+<Input DHCP_In>
+  Module im_file
+  File "C:\Windows\system32\dhcp\DhcpSrvLog*"
+  SavePos TRUE
+  Exec if $raw_event =~ /^#/ drop();
+  Exec $Message = $raw_event;
+</Input>
+
+<Input AD_Users>
+  Module im_msvistalog
+  Query <QueryList>\
+          <Query Id="0">\
+            <Select Path="Security">*[System[(EventID=4624 or EventID=4720 or EventID=4722 or EventID=4738 or EventID=4740 or EventID=4741 or EventID=4742 or EventID=4743 or EventID=4744 or EventID=4745 or EventID=4746 or EventID=4747 or EventID=4748 or EventID=4749 or EventID=4750 or EventID=4751 or EventID=4752 or EventID=4753 or EventID=4754 or EventID=4755 or EventID=4756 or EventID=4757 or EventID=4758 or EventID=4759 or EventID=4760 or EventID=4761 or EventID=4762 or EventID=4763 or EventID=4764)]]</Select>\
+          </Query>\
+        </QueryList>
+</Input>
+
+<Input AD_Computers>
+  Module im_msvistalog
+  Query <QueryList>\
+          <Query Id="0">\
+            <Select Path="Security">*[System[(EventID=4741 or EventID=4742 or EventID=4743 or EventID=4744 or EventID=4745 or EventID=4746 or EventID=4747 or EventID=4748 or EventID=4749 or EventID=4750 or EventID=4751 or EventID=4752 or EventID=4753 or EventID=4754 or EventID=4755 or EventID=4756 or EventID=4757 or EventID=4758 or EventID=4759 or EventID=4760 or EventID=4761 or EventID=4762 or EventID=4763 or EventID=4764)]]</Select>\
+          </Query>\
+        </QueryList>
+</Input>
+
+<Input AD_Hardware_Performance>
+  Module im_msvistalog
+  Query <QueryList>\
+          <Query Id="0">\
+            <!-- Events related to hardware and performance issues linked to AD users and computers -->
+            <Select Path="Security">*[System[(EventID=4624 or EventID=4625 or EventID=4647)]]</Select>  <!-- Login events -->
+            <Select Path="System">*[System[(EventID=6005 or EventID=6006 or EventID=6008 or EventID=41 or EventID=1102)]]</Select>  <!-- Boot, shutdown, and critical errors -->
+            <Select Path="Application">*[System[(EventID=1000 or EventID=1001 or EventID=1002 or EventID=1100)]]</Select>  <!-- Application errors that might affect AD users or computers -->
+          </Query>\
+        </QueryList>
+    <Exec>
+        if ($EventID == 4624){ ## Login events
+            
+        }
+    </Exec>
+</Input>
+
+<Input USB_Audit>
+  Module im_msvistalog
+  Query <QueryList>\
+          <Query Id="0">\
+            <Select Path="Security">*[System[(EventID=4663 or EventID=4698)]]</Select>\
+          </Query>\
+        </QueryList>
+  <Exec>
+    if ($EventID == 4663) {  ## File system object access event
+      $FileName = $EventData.Data[1];
+      $UserName = $EventData.Data[5];
+      $Domain = $EventData.Data[6];
+      $Timestamp = $EventTime;
+    }
+    if ($EventID == 4698) {  ## Task creation/modification (includes USB device insertions)
+      $TaskName = $EventData.Data[0];
+      $UserName = $EventData.Data[5];
+      $Domain = $EventData.Data[6];
+      $Timestamp = $EventTime;
+    }
+  </Exec>
+</Input>
+
+<Input Network_Share_Audit>
+  Module im_msvistalog
+  Query <QueryList>\
+          <Query Id="0">\
+            <Select Path="Security">*[System[(EventID=5140 or EventID=5145 or EventID=4663)]]</Select>  <!-- Network share access and file access within network shares -->
+          </Query>\
+        </QueryList>
+  <Exec>
+    if ($EventID == 5140) {  ## Network share access
+      $ShareName = $EventData.Data[6];
+      $UserName = $EventData.Data[5];
+      $Domain = $EventData.Data[6];
+      $Timestamp = $EventTime;
+      $Action = "Network Share Access";
+    }
+    if ($EventID == 5145) {  ## File access within a network share
+      $FileName = $EventData.Data[1];
+      $UserName = $EventData.Data[5];
+      $Domain = $EventData.Data[6];
+      $Timestamp = $EventTime;
+      $Action = "File Access";
+    }
+    if ($EventID == 4663) {  ## Object access (for more detailed tracking within network shares)
+      $ObjectName = $EventData.Data[1];
+      $UserName = $EventData.Data[5];
+      $Domain = $EventData.Data[6];
+      $Timestamp = $EventTime;
+      $Action = "Object Access";
+    }
+  </Exec>
+</Input>
+
+<Output out>
+  Module om_udp
+  Host 192.168.212.2
+  Port 5154
+  Exec to_gelf();  ## Convert data to GELF format
+</Output>
+
+<Output DNS_Out>
+  Module om_file
+  File "C:\Logs\DNS_Logs.log"
+</Output>
+
+<Output DHCP_Out>
+  Module om_file
+  File "C:\Logs\DHCP_Logs.log"
+</Output>
+
+<Output AD_Users_Out>
+  Module om_file
+  File "C:\Logs\AD_Users_Logs.log"
+</Output>
+
+<Output AD_Computers_Out>
+  Module om_file
+  File "C:\Logs\AD_Computers_Logs.log"
+</Output>
+
+<Output AD_Hardware_Performance_Out>
+  Module om_file
+  File "C:\Logs\AD_Hardware_Performance_Logs.log"
+</Output>
+
+<Output USB_Audit_Out>
+  Module om_file
+  File "C:\Logs\USB_Audit_Logs.log"
+</Output>
+
+<Output Network_Share_Audit_Out>
+  Module om_file
+  File "C:\Logs\Network_Share_Audit_Logs.log"
+</Output>
+
+<Route 1>
+  Path in => out
+</Route>
+
+<Route DNS>
+  Path DNS_In => DNS_Out
+</Route>
+
+<Route DHCP>
+  Path DHCP_In => DHCP_Out
+</Route>
+
+<Route AD_Users>
+  Path AD_Users => AD_Users_Out
+</Route>
+
+<Route AD_Computers>
+  Path AD_Computers => AD_Computers_Out
+</Route>
+
+<Route AD_Hardware_Performance>
+  Path AD_Hardware_Performance => AD_Hardware_Performance_Out
+</Route>
+
+<Route USB_Audit>
+  Path USB_Audit => USB_Audit_Out
+</Route>
+
+<Route Network_Share_Audit>
+  Path Network_Share_Audit => Network_Share_Audit_Out
+</Route>
